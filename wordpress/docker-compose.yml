@@ -1,0 +1,48 @@
+version: '2'
+services:
+  #
+  # Data Only Container
+  #
+  dbstore:
+    image: mysql:5.7
+    command: /bin/true
+    entrypoint: /bin/bash
+
+  wpstore:
+    image: wordpress:latest
+    command: /bin/true
+    entrypoint: /bin/bash
+
+  #
+  # Servers Containers
+  #
+  db:
+    image: mysql:5.7
+    volumes_from:
+      - dbstore
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: wordpress
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:latest
+    volumes_from:
+      - wpstore
+    links:
+      - db
+    ports:
+      - "8000:80"
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_PASSWORD: wordpress
+
+# Ref:
+# - http://www.alexecollins.com/docker-persistence
+# - http://stackoverflow.com/questions/18496940/how-to-deal-with-persistent-storage-e-g-databases-in-docker
+# - https://docs.docker.com/v1.10/engine/userguide/containers/dockervolumes/
